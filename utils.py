@@ -27,13 +27,13 @@ def get_argument_parser() -> argparse.Namespace:
     # Dataset params
     parser.add_argument('--dataset', type=str, default = 'MNIST', choices=["MNIST", "CIFAR10", "EMNIST"]) # Name of the datasets to partition
     parser.add_argument('--number_of_tasks', type=int, default = 5)
-    parser.add_argument('--scenario', type=str, default = "TIL", choices=["TIL", "CIL"])
+    parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
     # Architectural params
     parser.add_argument('--backbone', type=str, default = 'vanilla_mlp') # DNN backbone
     # Number of tasks = 1 ==> naive_continual_learner = joint learner (upper bound)
     # Number of tasks > 1 ==> naive_continual_learner = standard SGD (lower bound)
-    parser.add_argument('--method', type=str, default = 'naive_continual_learner') # Continual learning method name
+    parser.add_argument('--method', type=str, default = 'nispa_replay_plus') # Continual learning method name
 
     # System params
     parser.add_argument('--seed', type=int,  default=0) # for reproducibility
@@ -48,10 +48,18 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--batch_size_memory', type=int, default = 256) # needed for some replay methods
     parser.add_argument('--weight_decay', type=float, default =0.0) # l2 regularization
     parser.add_argument('--epochs', type=int, default = 5) # num epochs per task
+    parser.add_argument('--memory_per_class', type=int, default = 100) # needed for some replay methods
 
     # ADDITIONAL PARAMS: ADD ANYTHING NEEDED FOR SPECIFIC METHOD
     # MAKE SURE YOU PROVIDE DEFAULT VALUE, SO THAT OTHERS CAN JUST IGNORE
-    ...
+
+
+    # NISPA params
+    parser.add_argument('--min_activation_perc', type=float, default=60.0)
+    parser.add_argument('--phase_epochs', type=int, default = 1)
+    parser.add_argument("--num_phases", type=int, default=20)
+    parser.add_argument("--mag_pruning_perc", type=float, default=5)
+    parser.add_argument('--prune_perc', type=float, default=80.0)
 
 
     return parser.parse_args()

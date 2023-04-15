@@ -4,6 +4,7 @@ from datasets import get_experience_streams
 import torch
 
 from Source.naive_continual_learner import NaiveContinualLearner
+from Source.nispa_replay_plus import NispaReplayPlus
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN
 
@@ -19,9 +20,9 @@ if __name__ == '__main__':
 
     # Pick Backbone
     if args.backbone == "vanilla_mlp":
-        backbone = VanillaMLP(input_size, output_size).to(get_device())
+        backbone = VanillaMLP(input_size, output_size, args).to(get_device())
     elif args.backbone == "vanilla_cnn":
-        backbone = VanillaCNN(input_size, output_size).to(get_device())
+        backbone = VanillaCNN(input_size, output_size, args).to(get_device())
     else:
         raise Exception("Unknown args.backbone={}".format(args.backbone))
     
@@ -31,6 +32,8 @@ if __name__ == '__main__':
     # Pick Learner
     if args.method == "naive_continual_learner":
         learner = NaiveContinualLearner(args, backbone, scenario, task2classes)
+    elif args.method == "nispa_replay_plus":
+        learner = NispaReplayPlus(args, backbone, scenario, task2classes)
     else:
         raise Exception("Unknown args.method={}".format(args.method))
 
@@ -40,9 +43,9 @@ if __name__ == '__main__':
                                                                        scenario.val_stream,  # type: ignore
                                                                        scenario.test_stream), 1):
         print("Starting Task: {}".format(task_index))
-        learner.begin_task()
+        learner.begin_task(train_task, val_task, task_index)
         learner.learn_task(train_task, val_task, task_index)
-        learner.end_task()
+        learner.end_task(train_task, val_task, task_index)
         print("Ending Task: {}".format(task_index))
         all_accuracies.append(learner.accuracies_on_previous_task(task_index, args.scenario == "TIL"))
     log(args, all_accuracies)

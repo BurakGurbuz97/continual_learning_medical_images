@@ -19,7 +19,7 @@ class NaiveContinualLearner():
 
 
     # Overwrite this method
-    def begin_task(self) -> None:
+    def begin_task(self, train_dataset: TCLExperience, val_dataset: TCLExperience, current_task_index: int) -> None:
         return None
 
 
@@ -54,7 +54,7 @@ class NaiveContinualLearner():
 
 
     # Overwrite this method
-    def end_task(self) -> None:
+    def end_task(self, train_dataset: TCLExperience, val_dataset: TCLExperience, current_task_index: int) -> None:
         return None
     
 
