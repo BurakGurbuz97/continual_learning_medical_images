@@ -108,12 +108,12 @@ class MemoryAwareSynapses(NaiveContinualLearner):
         # Normalize the gradients and store them in omega
         for name in temp_dict:
             self.omega[name] = (self.omega[name] * self.prev_count + temp_dict[name]) / (self.prev_count + count)
-        print("self.omega['classifier.bias']", self.omega['classifier.bias'])\
+        # print("self.omega['classifier.bias']", self.omega['classifier.bias'])
 
         # Update the weights after the training of the previous task
         for name, param in self.backbone.named_parameters():
             self.prev_weights[name] = param.detach().clone().to(get_device())
-        print("classifier.bias", self.prev_weights['classifier.bias'])
+        # print("classifier.bias", self.prev_weights['classifier.bias'])
         self.prev_count += count
         return None
     

@@ -9,6 +9,7 @@ from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN
+from Source.remind import Remind
 
 def get_device() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -42,8 +43,12 @@ if __name__ == '__main__':
         learner = NaiveContinualLearner(args, backbone, scenario, task2classes)
     elif args.method == "nispa_replay_plus":
         learner = NispaReplayPlus(args, backbone, scenario, task2classes)
+    elif args.method == "dark_experience_replay":
+        learner = DarkExperienceReplay(args, backbone, scenario, task2classes)
     elif args.method == "memory_aware_synapses":
         learner = MemoryAwareSynapses(args, backbone, scenario, task2classes)
+    elif args.method == "remind":
+        learner = Remind(args, backbone, scenario, task2classes)
     else:
         raise Exception("Unknown args.method={}".format(args.method))
 
