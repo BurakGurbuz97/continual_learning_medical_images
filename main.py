@@ -14,12 +14,18 @@ def get_device() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
 
 if __name__ == '__main__':
+    torch.autograd.set_detect_anomaly(True)
     args = get_argument_parser()
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # Needed for reproducibility on Windows and some GPUs
     if args.deterministic: 
         set_seeds(args.seed)
     scenario, input_size, output_size, task2classes = get_experience_streams(args)
 
+    print('scenario', scenario)
+    print('input_size', input_size)
+    print('output_size', output_size)
+    print('task2classes', task2classes)
+    
     # Pick Backbone
     if args.backbone == "vanilla_mlp":
         backbone = VanillaMLP(input_size, output_size, args).to(get_device())
@@ -36,6 +42,8 @@ if __name__ == '__main__':
         learner = NaiveContinualLearner(args, backbone, scenario, task2classes)
     elif args.method == "nispa_replay_plus":
         learner = NispaReplayPlus(args, backbone, scenario, task2classes)
+    elif args.method == "memory_aware_synapses":
+        learner = MemoryAwareSynapses(args, backbone, scenario, task2classes)
     else:
         raise Exception("Unknown args.method={}".format(args.method))
 
