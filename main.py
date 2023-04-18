@@ -5,6 +5,7 @@ import torch
 
 from Source.naive_continual_learner import NaiveContinualLearner
 from Source.nispa_replay_plus import NispaReplayPlus
+from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN
@@ -14,12 +15,18 @@ def get_device() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
 
 if __name__ == '__main__':
+    torch.autograd.set_detect_anomaly(True)
     args = get_argument_parser()
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # Needed for reproducibility on Windows and some GPUs
     if args.deterministic: 
         set_seeds(args.seed)
     scenario, input_size, output_size, task2classes = get_experience_streams(args)
 
+    print('scenario', scenario)
+    print('input_size', input_size)
+    print('output_size', output_size)
+    print('task2classes', task2classes)
+    
     # Pick Backbone
     if args.backbone == "vanilla_mlp":
         backbone = VanillaMLP(input_size, output_size, args).to(get_device())
@@ -38,6 +45,8 @@ if __name__ == '__main__':
         learner = NispaReplayPlus(args, backbone, scenario, task2classes)
     elif args.method == "dark_experience_replay":
         learner = DarkExperienceReplay(args, backbone, scenario, task2classes)
+    elif args.method == "memory_aware_synapses":
+        learner = MemoryAwareSynapses(args, backbone, scenario, task2classes)
     elif args.method == "remind":
         learner = Remind(args, backbone, scenario, task2classes)
     else:

@@ -1,4 +1,4 @@
-name: research_new
+name: dl_proj
 channels:
   - pytorch
   - nvidia
@@ -178,4 +178,4 @@ dependencies:
     - tqdm==4.65.0
     - wandb==0.14.0
     - werkzeug==2.2.3
-prefix: C:\Users\musta\anaconda3\envs\research_new
+# prefix: C:\Users\musta\anaconda3\envs\research_new

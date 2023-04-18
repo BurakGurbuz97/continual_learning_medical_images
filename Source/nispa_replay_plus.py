@@ -74,6 +74,7 @@ class NispaReplayPlus(NaiveContinualLearner):
             self.set_candidate_untis(candidate_units)
             print('Dropping connections')
             connection_quota_grow = self.drop_plastic_to_others()
+            # connection_quota_drop_mag = self.drop_mag_pruning()
             # Total connections to grow
             #connection_quota_grow = [drop1+drop2 for drop1, drop2 in zip(connection_quota_drop_plastic, connection_quota_drop_mag)]
             # Grow connections

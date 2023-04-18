@@ -53,7 +53,9 @@ def get_argument_parser() -> argparse.Namespace:
 
     # ADDITIONAL PARAMS: ADD ANYTHING NEEDED FOR SPECIFIC METHOD
     # MAKE SURE YOU PROVIDE DEFAULT VALUE, SO THAT OTHERS CAN JUST IGNORE
-
+    # MAS params
+    parser.add_argument('--lambda_val', type=float, default=5.0)
+    parser.add_argument('--update_size', type=int, default=50) # The number of samples over which we calculate the omega values
 
     # NISPA params
     parser.add_argument('--min_activation_perc', type=float, default=60.0)
