@@ -10,6 +10,8 @@ from Source.dark_experience_replay import DarkExperienceReplay
 from Source.dark_experience_replay_plus_plus import DarkExperienceReplayPlusPlus
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN
+# from Source.Backbones.resnet_models import ResNet18, VGG16
+import timm
 from Source.remind import Remind
 
 def get_device() -> str:
@@ -18,10 +20,13 @@ def get_device() -> str:
 if __name__ == '__main__':
     torch.autograd.set_detect_anomaly(True)
     args = get_argument_parser()
+    print(args)
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8" # Needed for reproducibility on Windows and some GPUs
     if args.deterministic: 
         set_seeds(args.seed)
     scenario, input_size, output_size, task2classes = get_experience_streams(args)
+
+    args.num_classes = output_size
 
     print('scenario', scenario)
     print('input_size', input_size)
@@ -33,12 +38,13 @@ if __name__ == '__main__':
         backbone = VanillaMLP(input_size, output_size, args).to(get_device())
     elif args.backbone == "vanilla_cnn":
         backbone = VanillaCNN(input_size, output_size, args).to(get_device())
+    elif args.backbone == "resnet18":
+        backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=1).to(get_device())
+    elif args.backbone == "vgg16":
+        backbone = timm.create_model(model_name="vgg16", pretrained=False, num_classes=output_size, in_chans=1).to(get_device())
     else:
         raise Exception("Unknown args.backbone={}".format(args.backbone))
     
-    print(backbone)
-
-
     # Pick Learner
     if args.method == "naive_continual_learner":
         learner = NaiveContinualLearner(args, backbone, scenario, task2classes)
