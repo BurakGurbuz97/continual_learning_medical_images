@@ -7,7 +7,6 @@ from Source.naive_continual_learner import NaiveContinualLearner
 from Source.nispa_replay_plus import NispaReplayPlus
 from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
-from Source.dark_experience_replay_plus_plus import DarkExperienceReplayPlusPlus
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN , VGG11 
 from Source.remind import Remind
@@ -60,8 +59,6 @@ if __name__ == '__main__':
         learner = NispaReplayPlus(args, backbone, scenario, task2classes)
     elif args.method == "dark_experience_replay":
         learner = DarkExperienceReplay(args, backbone, scenario, task2classes)
-    elif args.method == "dark_experience_replay_plus_plus":
-        learner = DarkExperienceReplayPlusPlus(args, backbone, scenario, task2classes)
     elif args.method == "memory_aware_synapses":
         learner = MemoryAwareSynapses(args, backbone, scenario, task2classes)
     elif args.method == "remind":

@@ -106,7 +106,7 @@ class DarkExperienceReplay(NaiveContinualLearner):
         self.task2classes = task2classes
         self.transforms = RandomHorizontalFlip(0.3)
         self.buffer = Buffer(self.args.batch_size_memory, get_device())
-
+        self.loss = torch.nn.CrossEntropyLoss()
     # Overwrite this method
     def begin_task(self, train_dataset: TCLExperience, val_dataset: TCLExperience, current_task_index: int) -> None:
         return None
@@ -120,7 +120,6 @@ class DarkExperienceReplay(NaiveContinualLearner):
         self.optim_obj = getattr(torch.optim, self.args.optimizer)
         optimizer = self.optim_obj(self.backbone.parameters(), lr= self.args.learning_rate,
                                    weight_decay= self.args.weight_decay)
-        loss = torch.nn.CrossEntropyLoss()
         # Create data loaders
         train_loader = DataLoader(train_dataset.dataset, batch_size = self.args.batch_size, 
                                   shuffle=True)
@@ -136,15 +135,30 @@ class DarkExperienceReplay(NaiveContinualLearner):
                 target = target.to(get_device())
                 optimizer.zero_grad()
                 output, _ = self.backbone(data_aug)
-                batch_loss = loss(output, target.long())
-                if not self.buffer.is_empty():
-                    buf_inputs, buf_logits = self.buffer.get_data(self.args.batch_size, transform=self.transforms)
-                    buf_outputs, _ = self.backbone(buf_inputs)
-                    batch_loss += self.args.alpha * F.mse_loss(buf_outputs, buf_logits)
-                batch_loss.backward()
-                epoch_losses.append(batch_loss.item())
-                optimizer.step()
-                self.buffer.add_data(data, logits = output.data)
+                batch_loss = self.loss(output, target.long())
+                if not self.args.pp:
+                    if not self.buffer.is_empty():
+                        buf_inputs, buf_logits = self.buffer.get_data(self.args.batch_size, transform=self.transforms)
+                        buf_outputs, _ = self.backbone(buf_inputs)
+                        batch_loss += self.args.alpha * F.mse_loss(buf_outputs, buf_logits)
+                    batch_loss.backward()
+                    epoch_losses.append(batch_loss.item())
+                    optimizer.step()
+                    self.buffer.add_data(data, logits = output.data)
+                else:
+                    if not self.buffer.is_empty():
+                        buf_inputs, _, buf_logits = self.buffer.get_data(self.args.batch_size, transform=self.transforms)
+                        buf_outputs, _ = self.backbone(buf_inputs)
+                        batch_loss += self.args.alpha * F.mse_loss(buf_outputs, buf_logits)
+
+                        buf_inputs, buf_labels, _ = self.buffer.get_data(
+                        self.args.batch_size, transform=self.transforms)
+                        buf_outputs, _ = self.backbone(buf_inputs)
+                        batch_loss += self.args.beta * self.loss(buf_outputs, buf_labels)
+                    batch_loss.backward()
+                    epoch_losses.append(batch_loss.item())
+                    optimizer.step()
+                    self.buffer.add_data(examples=data, labels = target, logits = output.data)
 
         return None
 

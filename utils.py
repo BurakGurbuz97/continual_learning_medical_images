@@ -44,8 +44,6 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--optimizer', type=str, default = 'SGD') # Anything under torch.optim works. e.g., 'SGD' and 'Adam'
     parser.add_argument('--sgd_momentum', type=float, default = 0.90)
     parser.add_argument('--learning_rate', type=float, default = 0.1)
-    parser.add_argument('--alpha', type=float, default = 0.5)
-    parser.add_argument('--beta', type=float, default = 0.5)
     parser.add_argument('--batch_size', type=int, default = 256)
     parser.add_argument('--batch_size_memory', type=int, default = 256) # needed for some replay methods
     parser.add_argument('--weight_decay', type=float, default =0.0) # l2 regularization
@@ -69,6 +67,10 @@ def get_argument_parser() -> argparse.Namespace:
     # REMIND params
     parser.add_argument('--pretrain_epochs', type=int, default=5)
 
+    # DER params
+    parser.add_argument('--alpha', type=float, default = 0.5)
+    parser.add_argument('--beta', type=float, default = 0.5)
+    parser.add_argument('--pp', action="store_true", help="Use DER++")
     return parser.parse_args()
 
 
