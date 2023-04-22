@@ -104,11 +104,7 @@ class DarkExperienceReplay(NaiveContinualLearner):
         self.backbone = backbone
         self.scenario = scenario
         self.task2classes = task2classes
-        self.transforms = nn.Sequential(
-            RandomResizedCrop(size = 20),
-            Pad(4),
-            RandomHorizontalFlip()
-        )
+        self.transforms = RandomHorizontalFlip(0.3)
         self.buffer = Buffer(self.args.batch_size_memory, get_device())
 
     # Overwrite this method
