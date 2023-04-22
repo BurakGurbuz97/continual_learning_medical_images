@@ -22,18 +22,18 @@ def set_seeds(seed: int) -> None:
 def get_argument_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Experiment')
     # Logging params
-    parser.add_argument('--experiment_name', type=str, default = 'LOWER_BOUND_MNIST_TIL') # This is the name of the log directory
+    parser.add_argument('--experiment_name', type=str, default = 'REMIND_MNIST_CIL') # This is the name of the log directory
 
     # Dataset params
-    parser.add_argument('--dataset', type=str, default = 'MNIST', choices=["MNIST", "CIFAR10", "EMNIST"]) # Name of the datasets to partition
+    parser.add_argument('--dataset', type=str, default = 'CIFAR10', choices=["MNIST", "CIFAR10", "EMNIST"]) # Name of the datasets to partition
     parser.add_argument('--number_of_tasks', type=int, default = 5)
     parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
     # Architectural params
-    parser.add_argument('--backbone', type=str, default = 'vanilla_mlp') # DNN backbone
+    parser.add_argument('--backbone', type=str, default = 'vgg11') # DNN backbone
     # Number of tasks = 1 ==> naive_continual_learner = joint learner (upper bound)
     # Number of tasks > 1 ==> naive_continual_learner = standard SGD (lower bound)
-    parser.add_argument('--method', type=str, default = 'nispa_replay_plus') # Continual learning method name
+    parser.add_argument('--method', type=str, default = 'remind') # Continual learning method name
 
     # System params
     parser.add_argument('--seed', type=int,  default=0) # for reproducibility
@@ -65,6 +65,9 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument("--mag_pruning_perc", type=float, default=5)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
+
+    # REMIND params
+    parser.add_argument('--pretrain_epochs', type=int, default=5)
 
     return parser.parse_args()
 

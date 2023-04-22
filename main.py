@@ -9,10 +9,12 @@ from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
 from Source.dark_experience_replay_plus_plus import DarkExperienceReplayPlusPlus
 from Source.Backbones.vanilla_mlp import VanillaMLP
-from Source.Backbones.vanilla_cnn import VanillaCNN
-# from Source.Backbones.resnet_models import ResNet18, VGG16
-import timm
+from Source.Backbones.vanilla_cnn import VanillaCNN , VGG11 
 from Source.remind import Remind
+import torchvision.models as models
+import torch.nn as nn
+import torch.nn.functional as F
+
 
 def get_device() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -39,12 +41,18 @@ if __name__ == '__main__':
     elif args.backbone == "vanilla_cnn":
         backbone = VanillaCNN(input_size, output_size, args).to(get_device())
     elif args.backbone == "resnet18":
-        backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=1).to(get_device())
-    elif args.backbone == "vgg16":
-        backbone = timm.create_model(model_name="vgg16", pretrained=False, num_classes=output_size, in_chans=1).to(get_device())
+        backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device()) #models.resnet18(pretrained=False) #
+    elif args.backbone == "vgg11":
+        backbone = VGG11(input_size, output_size, args).to(get_device())
+        # timm.create_model(model_name="vgg16", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device())
     else:
         raise Exception("Unknown args.backbone={}".format(args.backbone))
     
+    # backbone = models.vgg11(pretrained=False) 
+    # rand_img = torch.rand(size= (32,1,28,28)).to(get_device())
+    # backbone(rand_img)
+    #print(backbone)
+
     # Pick Learner
     if args.method == "naive_continual_learner":
         learner = NaiveContinualLearner(args, backbone, scenario, task2classes)
