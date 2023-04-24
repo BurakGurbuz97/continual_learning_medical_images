@@ -64,9 +64,15 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument("--mag_pruning_perc", type=float, default=5)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
-
     # REMIND params
-    parser.add_argument('--pretrain_epochs', type=int, default=5)
+    parser.add_argument('--pretrain_epochs', type=int, default=0)
+    parser.add_argument('--remind_learning_rate', type=float, default=-1e5)
+    parser.add_argument('--max_buffer_size', type=int, default=10000)
+    parser.add_argument('--spatial_feat_dim', type=int, default=2)
+    parser.add_argument('--num_codebooks', type=int, default=32)
+    parser.add_argument('--codebook_size', type=int, default=256)
+    parser.add_argument('--num_channels', type=int, default=512)
+    parser.add_argument('--num_samples', type=int, default=50)
 
     return parser.parse_args()
 
