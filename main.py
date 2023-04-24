@@ -9,9 +9,9 @@ from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
 from Source.Backbones.vanilla_mlp import VanillaMLP
 from Source.Backbones.vanilla_cnn import VanillaCNN 
-from Source.Backbones.vgg11_base import vgg11_wrapper
+from Source.Backbones.vgg11_base import vgg11_wrapper, VGG11
+from Source.Backbones.cnn_small import CNN_Small
 from Source.remind import Remind
-import torchvision.models as models
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -43,7 +43,12 @@ if __name__ == '__main__':
     # elif args.backbone == "resnet18":
     #     backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device()) #models.resnet18(pretrained=False) #
     elif args.backbone == "vgg11":
-        backbone = vgg11_wrapper(input_size, output_size, args).to(get_device())
+        if args.method == "nispa_replay_plus":
+            backbone = VGG11(input_size, output_size, args).to(get_device())
+        else:
+            backbone = vgg11_wrapper(input_size, output_size, args).to(get_device())
+    elif args.backbone == "cnn_small":
+        backbone = CNN_Small(input_size, output_size, args).to(get_device())
     else:
         raise Exception("Unknown args.backbone={}".format(args.backbone))
 

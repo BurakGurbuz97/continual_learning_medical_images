@@ -32,7 +32,14 @@ class NispaReplayPlus(NaiveContinualLearner):
     def __init__(self, args: Namespace, backbone: torch.nn.Module, scenario: GenericCLScenario, task2classes: Dict):
         super(NispaReplayPlus, self).__init__(args, backbone, scenario, task2classes)
         self.args = args
+        hidden_layers = nn.ModuleList()
+        # Remove dropout layers
+        for m in backbone.hidden_layers:
+            if not isinstance(m, nn.Dropout):
+                hidden_layers.append(m)
+        backbone.hidden_layers = hidden_layers
         self.backbone = random_prune(backbone, args.prune_perc) # prune backbone before training
+        print(self.backbone)
         self.scenario = scenario
         self.task2classes = task2classes
         self.memory = MemoryBuffer(args, task2classes, self.backbone.input_size) # type: ignore
@@ -52,7 +59,10 @@ class NispaReplayPlus(NaiveContinualLearner):
         self.classes_seen_so_far = list(set(self.classes_seen_so_far + train_dataset.classes_in_this_experience))
         self.current_stable_units[-1] = self.classes_seen_so_far
         self.current_task_index = current_task_index
-        self.current_plastic_units[-1] = list(set(range(self.backbone.classifier.weight.shape[0])) - set(self.classes_seen_so_far))
+        try:
+            self.current_plastic_units[-1] = list(set(range(self.backbone.classifier.weight.shape[0])) - set(self.classes_seen_so_far))
+        except:
+            self.current_plastic_units[-1] = list(set(range(self.backbone.tail.classifier.weight.shape[0])) - set(self.classes_seen_so_far))
 
 
     def learn_task(self, train_dataset: TCLExperience, val_dataset: TCLExperience, current_task_index: int) -> None:
@@ -74,9 +84,6 @@ class NispaReplayPlus(NaiveContinualLearner):
             self.set_candidate_untis(candidate_units)
             print('Dropping connections')
             connection_quota_grow = self.drop_plastic_to_others()
-            # connection_quota_drop_mag = self.drop_mag_pruning()
-            # Total connections to grow
-            #connection_quota_grow = [drop1+drop2 for drop1, drop2 in zip(connection_quota_drop_plastic, connection_quota_drop_mag)]
             # Grow connections
             self.backbone, _ = self.grow_connections(connection_quota_grow)
 
@@ -172,6 +179,7 @@ class NispaReplayPlus(NaiveContinualLearner):
                                     for activation in activations]  
                 total_activations =  [total_activations[i]+activation
                                 for i, activation in enumerate(batch_sum_activation)] if total_activations else batch_sum_activation
+                break
                 
         selected_candidate_units = []
         for average_layer_activation in total_activations:

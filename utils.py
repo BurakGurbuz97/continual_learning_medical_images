@@ -30,7 +30,7 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
     # Architectural params
-    parser.add_argument('--backbone', type=str, default = 'vgg11') # DNN backbone
+    parser.add_argument('--backbone', type=str, default = 'cnn_small') # DNN backbone
     # Number of tasks = 1 ==> naive_continual_learner = joint learner (upper bound)
     # Number of tasks > 1 ==> naive_continual_learner = standard SGD (lower bound)
     parser.add_argument('--method', type=str, default = 'remind') # Continual learning method name
@@ -60,7 +60,6 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--min_activation_perc', type=float, default=60.0)
     parser.add_argument('--phase_epochs', type=int, default = 1)
     parser.add_argument("--num_phases", type=int, default=20)
-    parser.add_argument("--mag_pruning_perc", type=float, default=5)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
 
