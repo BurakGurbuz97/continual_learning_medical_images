@@ -8,7 +8,8 @@ from Source.nispa_replay_plus import NispaReplayPlus
 from Source.memory_aware_synapses import MemoryAwareSynapses
 from Source.dark_experience_replay import DarkExperienceReplay
 from Source.Backbones.vanilla_mlp import VanillaMLP
-from Source.Backbones.vanilla_cnn import VanillaCNN , VGG11 
+from Source.Backbones.vanilla_cnn import VanillaCNN 
+from Source.Backbones.vgg11_base import vgg11_wrapper
 from Source.remind import Remind
 import torchvision.models as models
 import torch.nn as nn
@@ -39,18 +40,12 @@ if __name__ == '__main__':
         backbone = VanillaMLP(input_size, output_size, args).to(get_device())
     elif args.backbone == "vanilla_cnn":
         backbone = VanillaCNN(input_size, output_size, args).to(get_device())
-    elif args.backbone == "resnet18":
-        backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device()) #models.resnet18(pretrained=False) #
+    # elif args.backbone == "resnet18":
+    #     backbone = timm.create_model(model_name="resnet18", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device()) #models.resnet18(pretrained=False) #
     elif args.backbone == "vgg11":
-        backbone = VGG11(input_size, output_size, args).to(get_device())
-        # timm.create_model(model_name="vgg16", pretrained=False, num_classes=output_size, in_chans=input_size[0]).to(get_device())
+        backbone = vgg11_wrapper(input_size, output_size, args).to(get_device())
     else:
         raise Exception("Unknown args.backbone={}".format(args.backbone))
-    
-    # backbone = models.vgg11(pretrained=False) 
-    # rand_img = torch.rand(size= (32,1,28,28)).to(get_device())
-    # backbone(rand_img)
-    #print(backbone)
 
     # Pick Learner
     if args.method == "naive_continual_learner":
@@ -75,8 +70,10 @@ if __name__ == '__main__':
         learner.begin_task(train_task, val_task, task_index)
         learner.learn_task(train_task, val_task, task_index)
         learner.end_task(train_task, val_task, task_index)
-        print("Ending Task: {}".format(task_index))
         all_accuracies.append(learner.accuracies_on_previous_task(task_index, args.scenario == "TIL"))
+        print("Ending Task: {}".format(task_index))
+        print()
+
     log(args, all_accuracies)
         
 

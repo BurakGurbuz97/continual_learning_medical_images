@@ -16,10 +16,11 @@ import medmnist
 
 
 class CustomDataset(Dataset):
-    def __init__(self, split, dataset_name, label_padding = 0):
+    def __init__(self, split, dataset_name, label_padding = 0, return_idx= False):
         self.dataset = getattr(medmnist, dataset_name)(split=split, download=True, root=DATASET_PATH)
         self.data = self.dataset.imgs
         self.targets = list(map(lambda x: int(x), self.dataset.labels + label_padding))
+        self.return_idx = return_idx
 
     def __len__(self):
         return len(self.data)
@@ -37,14 +38,18 @@ class CustomDataset(Dataset):
         example_padded = np.pad(example, ((2, 2), (2, 2), (0, 0)), mode='constant', constant_values=0)
 
         # Check if the example has a single channel, if so, copy it along the third dimension to make it 3 channels
-        if len(example_padded.shape) == 2:
+        if example_padded.shape[-1] == 1:
             example_padded = np.repeat(example_padded, 3, axis=2)
 
         # Normalize the pixel values to be between 0 and 1
         example_normalized = example_padded / 255.0
         example_transposed = np.transpose(example_normalized, (2, 0, 1))
 
-        return torch.from_numpy(example_transposed.astype(np.float32)), torch.tensor(target, dtype=torch.long)
+        if self.return_idx == False:
+            return torch.from_numpy(example_transposed.astype(np.float32)), torch.tensor(target, dtype=torch.long)
+        else:
+            return torch.from_numpy(example_transposed.astype(np.float32)), torch.tensor(target, dtype=torch.long) , idx
+
 
 def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario, Tuple, int, Dict]:
     # Example of how to add Pytorch dataset. Here EMNIST is pytorch dataset object.
@@ -87,18 +92,18 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
 
     if args.dataset == "Microscopic":
         # Create PathMNIST dataset
-        path_train = CustomDataset(split="train", dataset_name="PathMNIST")
-        path_test = CustomDataset(split="test", dataset_name="PathMNIST")
+        path_train = CustomDataset(split="train", dataset_name="PathMNIST" , return_idx= args.return_idx )
+        path_test = CustomDataset(split="test", dataset_name="PathMNIST", return_idx= args.return_idx)
         num_classes_path = len(np.unique(path_train.targets))
 
         # Create BloodMNIST dataset and pad the labels
-        blood_train = CustomDataset(split="train", dataset_name="BloodMNIST", label_padding=num_classes_path)
-        blood_test = CustomDataset(split="test", dataset_name="BloodMNIST", label_padding=num_classes_path)
+        blood_train = CustomDataset(split="train", dataset_name="BloodMNIST", label_padding=num_classes_path, return_idx= args.return_idx)
+        blood_test = CustomDataset(split="test", dataset_name="BloodMNIST", label_padding=num_classes_path, return_idx= args.return_idx)
         num_classes_blood = len(np.unique(blood_train.targets))
 
         # Create TissueMNIST dataset and pad the labels
-        tissue_train = CustomDataset(split="train", dataset_name="TissueMNIST", label_padding=num_classes_path + num_classes_blood)
-        tissue_test = CustomDataset(split="test", dataset_name="TissueMNIST", label_padding=num_classes_path + num_classes_blood)
+        tissue_train = CustomDataset(split="train", dataset_name="TissueMNIST", label_padding=num_classes_path + num_classes_blood, return_idx= args.return_idx)
+        tissue_test = CustomDataset(split="test", dataset_name="TissueMNIST", label_padding=num_classes_path + num_classes_blood, return_idx= args.return_idx)
         num_classes_tissue = len(np.unique(tissue_train.targets))
 
         # Create Scenario
@@ -114,7 +119,9 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
         stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.1, output_stream="val", shuffle=True)
         task2classes = dict((index, stream.classes_in_this_experience)
                             for index, stream in enumerate(stream_with_val.train_stream, 1))
+        
+        total_classes = num_classes_path + num_classes_blood + num_classes_tissue
 
-        return (stream_with_val, (3, 32, 32), 10, task2classes)
+        return (stream_with_val, (3, 32, 32), total_classes, task2classes)
     
     raise Exception("Dataset {} is not defined!".format(args.dataset))
