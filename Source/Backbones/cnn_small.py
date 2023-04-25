@@ -8,7 +8,7 @@ from typing import Tuple, List
 from Source.Backbones.utils import SparseConv2d, SparseLinear
 
 
-class VanillaCNN(nn.Module):
+class CNN_Small(nn.Module):
     def __init__(self, input_size: Tuple, output_size: int, args: Namespace) -> None:
         """
         Instantiates the layers of the network.
@@ -18,28 +18,43 @@ class VanillaCNN(nn.Module):
         self.conv2d = nn.Conv2d if args.method != 'nispa_replay_plus'  else SparseConv2d
         self.linear = nn.Linear if args.method != 'nispa_replay_plus'  else SparseLinear
 
-        super(VanillaCNN, self).__init__()
+        super(CNN_Small, self).__init__()
         self.input_size = input_size
-        self.conv2lin_size = 32*9*9
-        self.conv2lin_mapping_size = 9*9
+        self.conv2lin_size = 128*8*8
+        self.conv2lin_mapping_size = 8*8
         self.output_size = output_size
 
         self.conv = nn.ModuleList()
         self.hidden_layers = nn.ModuleList()
 
         # Add convolutional layers
-        self.conv.append(self.conv2d(input_size[0], 32, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
+        self.conv.append(self.conv2d(input_size[0], 64, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
         self.conv.append(nn.ReLU())
-        self.conv.append(nn.MaxPool2d(3))
+        self.conv.append(self.conv2d(64, 64, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
+        self.conv.append(nn.ReLU())
+        self.conv.append(nn.MaxPool2d(2))
+
+        self.conv.append(self.conv2d(64, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
+        self.conv.append(nn.ReLU())
+        self.conv.append(self.conv2d(128, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
+        self.conv.append(nn.ReLU())
+        self.conv.append(nn.MaxPool2d(2))
         
         # Add hidden layers
-        self.hidden_layers.append(self.linear(self.conv2lin_size, 1000))
+        self.hidden_layers.append(self.linear(self.conv2lin_size, 2000))
         self.hidden_layers.append(nn.ReLU())
 
         # Add classifier
-        self.classifier = self.linear(1000, self.output_size)
-        self.net = nn.Sequential(self.conv, self.hidden_layers, self.classifier)
+        self.classifier = self.linear(2000, self.output_size)
+        self._initialize_weights()
 
+
+    def _initialize_weights(self) -> None:
+        for m in self.modules():
+            if isinstance(m, (SparseLinear, SparseConv2d, nn.Linear, nn.Conv2d)):
+                nn.init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """

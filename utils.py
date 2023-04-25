@@ -25,12 +25,12 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--experiment_name', type=str, default = 'REMIND_MNIST_CIL') # This is the name of the log directory
 
     # Dataset params
-    parser.add_argument('--dataset', type=str, default = 'CIFAR10', choices=["MNIST", "CIFAR10", "EMNIST"]) # Name of the datasets to partition
+    parser.add_argument('--dataset', type=str, default = 'Microscopic', choices=["MNIST", "CIFAR10", "EMNIST", "Microscopic"]) # Name of the datasets to partition
     parser.add_argument('--number_of_tasks', type=int, default = 5)
     parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
     # Architectural params
-    parser.add_argument('--backbone', type=str, default = 'vgg11') # DNN backbone
+    parser.add_argument('--backbone', type=str, default = 'cnn_small') # DNN backbone
     # Number of tasks = 1 ==> naive_continual_learner = joint learner (upper bound)
     # Number of tasks > 1 ==> naive_continual_learner = standard SGD (lower bound)
     parser.add_argument('--method', type=str, default = 'remind') # Continual learning method name
@@ -44,7 +44,6 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--optimizer', type=str, default = 'SGD') # Anything under torch.optim works. e.g., 'SGD' and 'Adam'
     parser.add_argument('--sgd_momentum', type=float, default = 0.90)
     parser.add_argument('--learning_rate', type=float, default = 0.1)
-    parser.add_argument('--alpha', type=float, default = 0.5)
     parser.add_argument('--batch_size', type=int, default = 256)
     parser.add_argument('--batch_size_memory', type=int, default = 256) # needed for some replay methods
     parser.add_argument('--weight_decay', type=float, default =0.0) # l2 regularization
@@ -61,19 +60,24 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--min_activation_perc', type=float, default=60.0)
     parser.add_argument('--phase_epochs', type=int, default = 1)
     parser.add_argument("--num_phases", type=int, default=20)
-    parser.add_argument("--mag_pruning_perc", type=float, default=5)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
-    # REMIND params
-    parser.add_argument('--pretrain_epochs', type=int, default=0)
-    parser.add_argument('--remind_learning_rate', type=float, default=-1e5)
-    parser.add_argument('--max_buffer_size', type=int, default=10000)
+    # REMIND params: Uses Adam by default
+    parser.add_argument('--pretrain_epochs', type=int, default=5) #Pre-training of both networks, before splitting into G and F classifier
+    parser.add_argument('--replay_percentage', type=float, default=0.05)  #replay samples percentage --> min(X% of memory_per_class * num_classes , 50)
+    parser.add_argument('--return_idx', type=bool, default=False)  #required True for REMIND, set false for others
+    parser.add_argument('--remind_learning_rate', type=float, default=0.0001)
     parser.add_argument('--spatial_feat_dim', type=int, default=2)
     parser.add_argument('--num_codebooks', type=int, default=32)
     parser.add_argument('--codebook_size', type=int, default=256)
     parser.add_argument('--num_channels', type=int, default=512)
-    parser.add_argument('--num_samples', type=int, default=50)
+    parser.add_argument('--overfit_batches', type=int, default=None)
+    parser.add_argument('--pretrain_overfit_batches', type=int, default=None)
 
+    # DER params
+    parser.add_argument('--alpha', type=float, default = 0.5)
+    parser.add_argument('--beta', type=float, default = 0.5)
+    parser.add_argument('--pp', action="store_true", help="Use DER++")
     return parser.parse_args()
 
 
@@ -89,3 +93,6 @@ def log(args: argparse.Namespace, all_accuracies: List[List]) -> None:
         # Write row headers and data
         for row_header, row_data in zip(row_headers, all_accuracies):
             csv_writer.writerow([row_header] + row_data)
+
+
+
