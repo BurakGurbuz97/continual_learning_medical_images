@@ -64,7 +64,7 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
                               train_transform = transforms.ToTensor(),
                               eval_transform=transforms.ToTensor())
         
-        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.1, output_stream="val", shuffle=True)
+        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.3, output_stream="val", shuffle=True)
         task2classes = dict((index, stream.classes_in_this_experience)
                             for index, stream in enumerate(stream_with_val.train_stream, 1))
         return (stream_with_val, (1, 28, 28), 26, task2classes)
@@ -72,7 +72,7 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
     if args.dataset == "MNIST":
         stream = SplitMNIST(n_experiences = args.number_of_tasks,
                             seed = args.seed, dataset_root=DATASET_PATH, fixed_class_order=list(range(10)))
-        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.1, output_stream="val", shuffle=True)
+        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.8, output_stream="val", shuffle=True)
         task2classes = dict((index, stream.classes_in_this_experience)
                             for index, stream in enumerate(stream_with_val.train_stream, 1))
         return (stream_with_val, (1, 28, 28), 10, task2classes)
@@ -84,7 +84,7 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
         stream = SplitCIFAR10(n_experiences = args.number_of_tasks,
                               seed = args.seed, dataset_root=DATASET_PATH, fixed_class_order=list(range(10)),
                               train_transform=transform, eval_transform=transform)
-        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.1, output_stream="val", shuffle=True)
+        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.3, output_stream="val", shuffle=True)
         task2classes = dict((index, stream.classes_in_this_experience)
                             for index, stream in enumerate(stream_with_val.train_stream, 1))
         return (stream_with_val, (3, 32, 32), 10, task2classes)

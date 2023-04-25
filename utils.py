@@ -62,7 +62,6 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument("--num_phases", type=int, default=20)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
-
     # REMIND params: Uses Adam by default
     parser.add_argument('--pretrain_epochs', type=int, default=5) #Pre-training of both networks, before splitting into G and F classifier
     parser.add_argument('--replay_percentage', type=float, default=0.05)  #replay samples percentage --> min(X% of memory_per_class * num_classes , 50)

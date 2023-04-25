@@ -34,7 +34,6 @@ class Remind(NaiveContinualLearner):
 
         self.extract_features_from = 'model.15'
 
-
         self.lr = args.remind_learning_rate
         self.batch_size = args.batch_size
 
@@ -84,7 +83,7 @@ class Remind(NaiveContinualLearner):
         # allocate space for features and labels
         features_data = np.empty((data_len, num_channels, spatial_feat_dim, spatial_feat_dim), dtype=np.float32)
         labels_data = np.empty((data_len, 1), dtype=np.int)
-        item_ixs_data = np.empty((data_len, 1), dtype=np.int)
+        # item_ixs_data = np.empty((data_len, 1), dtype=np.int)
 
         # put features and labels into arrays
         start_ix = 0
@@ -96,7 +95,8 @@ class Remind(NaiveContinualLearner):
             labels_data[start_ix:end_ix] = np.atleast_2d(batch_y.numpy().astype(np.int)).transpose()
             item_ixs_data[start_ix:end_ix] = np.atleast_2d(batch_idx.numpy().astype(np.int)).transpose()
             start_ix = end_ix
-        return features_data, labels_data, item_ixs_data
+        return features_data, labels_data #, item_ixs_data
+
 
     def fit_pq(self, feats_base_init, labels_base_init,item_ix_base_init, num_codebooks,
             codebook_size, num_channels=512, spatial_feat_dim=7 , batch_size=128):
@@ -130,17 +130,20 @@ class Remind(NaiveContinualLearner):
 
         print('\nEncoding and Storing Base Init Codes')
         start_time = time.time()
+        
         latent_dict = {}
-        class_id_to_item_ix_dict = defaultdict(list)
-        rehearsal_ixs = []
         mb = min(batch_size, num_samples)
+
+                    # put codes and labels into buffer (dictionary)
+        for j in range(len(batch_labels)):
+            latent_dict[int(batch_labels[j])] = []
+
         for i in range(0, num_samples, mb):
             start = i
             end = min(start + mb, num_samples)
             data_batch = feats_base_init[start:end]
             batch_labels = labels_base_init[start:end]
-            batch_item_ixs = item_ix_base_init[start:end]
-
+            
             data_batch = np.transpose(data_batch, (0, 2, 3, 1))
             data_batch = np.reshape(data_batch, (-1, num_channels))
             codes = pq.compute_codes(data_batch)
@@ -148,10 +151,7 @@ class Remind(NaiveContinualLearner):
 
             # put codes and labels into buffer (dictionary)
             for j in range(len(batch_labels)):
-                ix = int(batch_item_ixs[j])
-                latent_dict[ix] = [codes[j], batch_labels[j]]
-                rehearsal_ixs.append(ix)
-                class_id_to_item_ix_dict[int(batch_labels[j])].append(ix)
+                latent_dict[int(batch_labels[j])].append(codes[j])
                 counter += 1
 
         print("Completed in {} secs".format(time.time() - start_time))
@@ -178,7 +178,7 @@ class Remind(NaiveContinualLearner):
         val_loader = DataLoader(val_dataset.dataset, batch_size = self.batch_size, shuffle=False)
 
         print("Extracting features and Training feature quantizer")
-        feat_data, label_data, item_ix_data = self.extract_features(self.classifier_G, train_loader,
+        feat_data, label_data = self.extract_features(self.classifier_G, train_loader,
                                                                                 len(train_loader.dataset),
                                                                                 num_channels=self.num_channels,
                                                                                 spatial_feat_dim = self.spatial_feat_dim)        
@@ -270,7 +270,7 @@ class Remind(NaiveContinualLearner):
         
         counter = 0 #track how many samples are in buffer
         total_loss = 0
-
+        
         for epoch_id  in range(self.args.epochs):
             for batch_id , (batch_images, batch_labels, batch_item_ixs, _)  in  enumerate(tqdm(curr_loader , desc=f" Epoch {epoch_id}/{self.args.epochs}")):
                 if batch_id >= self.overfit_batches and self.args.overfit_batches != None:
