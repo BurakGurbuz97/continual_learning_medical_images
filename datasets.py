@@ -124,4 +124,47 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
 
         return (stream_with_val, (3, 32, 32), total_classes, task2classes)
     
+    if args.dataset == "Radiological":
+        # OrganMNIST, 11 class classification (5, 2, 2, 2), we have four tasks
+        organ_train = CustomDataset(split="train", dataset_name="OrganCMNIST",
+                                    label_padding = 0, return_idx= args.return_idx)
+        organ_test = CustomDataset(split="test", dataset_name="OrganCMNIST",
+                                   label_padding = 0, return_idx= args.return_idx)
+        num_classes_organ = len(np.unique(organ_train.targets))
+
+        # BreastMNIST, binary classification
+        breast_train = CustomDataset(split="train", dataset_name="BreastMNIST",
+                                     label_padding= num_classes_organ, return_idx= args.return_idx)
+        breast_test = CustomDataset(split="test", dataset_name="BreastMNIST",
+                                    label_padding= num_classes_organ, return_idx= args.return_idx)
+        num_classes_breast = len(np.unique(breast_train.targets))
+
+        # PneumoniaMNIST, binary classification
+        pneumonia_train = CustomDataset(split="train", dataset_name="PneumoniaMNIST",
+                                        label_padding=(num_classes_organ+num_classes_breast),
+                                        return_idx= args.return_idx)
+        pneumonia_test = CustomDataset(split="test", dataset_name="PneumoniaMNIST",
+                                       label_padding=(num_classes_organ+num_classes_breast),
+                                         return_idx= args.return_idx)
+        num_classes_pneumonia = len(np.unique(pneumonia_train.targets))
+
+        stream = nc_benchmark(train_dataset=[organ_train, breast_train, pneumonia_train], # type: ignore
+                        test_dataset=[organ_test, breast_test, pneumonia_test], # type: ignore
+                        n_experiences=6,
+                        per_exp_classes={0: 5, 1: 2, 2:2, 3:2,
+                                         4: num_classes_breast, 5: num_classes_pneumonia},
+                        task_labels = False, shuffle = False,
+                        seed = args.seed, fixed_class_order=list([l
+                                            for l in range(num_classes_organ + num_classes_breast + num_classes_pneumonia)]),
+                        train_transform = torch.nn.Identity(),
+                        eval_transform=torch.nn.Identity())
+
+        stream_with_val = benchmark_with_validation_stream(stream, validation_size=0.1, output_stream="val", shuffle=True)
+        task2classes = dict((index, stream.classes_in_this_experience)
+                            for index, stream in enumerate(stream_with_val.train_stream, 1))
+        
+        total_classes = num_classes_organ + num_classes_breast + num_classes_pneumonia
+
+        return (stream_with_val, (3, 32, 32), total_classes, task2classes)
+    
     raise Exception("Dataset {} is not defined!".format(args.dataset))

@@ -26,6 +26,12 @@ def get_n_sample_per_class(dataset: TCLExperience, n: int) -> List:
         subsets.append((samples, i))
     return subsets
 
+def _gpu_prefected_loader(train_task: ..., bs: int, shuffle: bool) -> DataLoader:
+    x, y, t = zip(*[(x, y, t) for x, y, t in train_task])
+    x_tensor = torch.stack(x).clone().detach().to("cuda")
+    y_tensor, t_tensor = torch.tensor(y).to("cuda"), torch.tensor(t).to("cuda")
+    tensor_dataset = torch.utils.data.TensorDataset(x_tensor, y_tensor, t_tensor) # type: ignore
+    return DataLoader(tensor_dataset, bs,  shuffle=shuffle)
 
 class NispaReplayPlus(NaiveContinualLearner):
 
@@ -71,8 +77,8 @@ class NispaReplayPlus(NaiveContinualLearner):
         self.optim_obj = getattr(torch.optim, self.args.optimizer)
         print("****** Learning Task-{}   Classes: {} ******".format(current_task_index, train_dataset.classes_in_this_experience))
         # Create data loaders
-        train_loader = DataLoader(train_dataset.dataset, batch_size = self.args.batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset.dataset, batch_size = self.args.batch_size, shuffle=False)
+        train_loader = _gpu_prefected_loader(train_dataset.dataset, self.args.batch_size, shuffle=True)
+        val_loader = _gpu_prefected_loader(val_dataset.dataset, self.args.batch_size, shuffle=False)
 
         # Train
         for phase_index in range(1, self.args.num_phases + 1):

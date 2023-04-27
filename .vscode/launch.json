@@ -11,9 +11,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--method", "nispa_replay_plus", "--learning_rate", "0.1", "--batch_size", "256",
+            "args": ["--experiment_name", "Radiological_CIL_nispa", "--dataset", "Radiological", "--method", "nispa_replay_plus", "--learning_rate", "0.1", "--batch_size", "256",
             "--batch_size_memory", "256", "--memory_per_class", "100", "--min_activation_perc", "70.0",
             "--num_phases", "10", "--prune_perc", "70.0", "--phase_epochs", "1"]
         }
     ]
 }
+

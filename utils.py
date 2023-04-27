@@ -25,7 +25,7 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--experiment_name', type=str, default = 'REMIND_MNIST_CIL') # This is the name of the log directory
 
     # Dataset params
-    parser.add_argument('--dataset', type=str, default = 'Microscopic', choices=["MNIST", "CIFAR10", "EMNIST", "Microscopic"]) # Name of the datasets to partition
+    parser.add_argument('--dataset', type=str, default = 'Microscopic', choices=["MNIST", "CIFAR10", "EMNIST", "Microscopic", "Radiological"]) # Name of the datasets to partition
     parser.add_argument('--number_of_tasks', type=int, default = 5)
     parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
