@@ -22,7 +22,17 @@ python main.py --method remind --backbone vgg11 --dataset Microscopic  --return_
 
 ## Instructions to run DER
 
+To run vanilla DER:
 
+```console
+python main.py --method "dark_experience_replay" --experiment_name "Microscope_CIL_DER" --epochs 10
+```
+
+To run DER++
+
+```console
+python main.py --method "dark_experience_replay" --experiment_name "Microscope_CIL_DERPP" --pp --epochs 10
+```
 
 ## Team Members
 Amritpal Singh, Mustafa Burak Gurbuz, Shiva Souhith Gantha , Prahlad Jasti 
