@@ -109,8 +109,9 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
         # Create Scenario
         stream = nc_benchmark(train_dataset=[path_train, blood_train, tissue_train], # type: ignore
                               test_dataset=[path_test, blood_test, tissue_test], # type: ignore
-                              n_experiences=3,
-                              per_exp_classes={0: num_classes_path, 1: num_classes_blood, 2: num_classes_tissue},
+                              n_experiences=3 if args.number_of_tasks != 1 else 1,
+                              per_exp_classes={0: num_classes_path, 1: num_classes_blood, 2: num_classes_tissue}
+                              if args.number_of_tasks != 1 else {0: num_classes_path + num_classes_blood + num_classes_tissue},
                               task_labels = False, shuffle = False,
                               seed = args.seed, fixed_class_order=list([l for l in range(num_classes_path + num_classes_blood + num_classes_tissue)]),
                               train_transform = torch.nn.Identity(),
@@ -148,11 +149,13 @@ def get_experience_streams(args: argparse.Namespace) -> Tuple[GenericCLScenario,
                                          return_idx= args.return_idx)
         num_classes_pneumonia = len(np.unique(pneumonia_train.targets))
 
+        
         stream = nc_benchmark(train_dataset=[organ_train, breast_train, pneumonia_train], # type: ignore
                         test_dataset=[organ_test, breast_test, pneumonia_test], # type: ignore
-                        n_experiences=6,
+                        n_experiences=6 if args.number_of_tasks != 1 else 1,
                         per_exp_classes={0: 5, 1: 2, 2:2, 3:2,
-                                         4: num_classes_breast, 5: num_classes_pneumonia},
+                                         4: num_classes_breast, 5: num_classes_pneumonia}
+                                         if args.number_of_tasks != 1 else {0: num_classes_organ + num_classes_breast + num_classes_pneumonia},
                         task_labels = False, shuffle = False,
                         seed = args.seed, fixed_class_order=list([l
                                             for l in range(num_classes_organ + num_classes_breast + num_classes_pneumonia)]),
