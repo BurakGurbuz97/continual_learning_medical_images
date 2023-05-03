@@ -1,0 +1,4 @@
+,Task1 Acc,Task2 Acc,Task3 Acc,
+Eval After Task1,0.569220056,,,
+Eval After Task2,0.617827298,0.638409822,,
+Eval After Task3,0.594011142,0.740426776,0.482550761,0.605662893

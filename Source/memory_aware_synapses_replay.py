@@ -6,8 +6,8 @@ from typing import Dict, List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 from avalanche.benchmarks import GenericCLScenario, TCLExperience
-import math
-import copy
+# import math
+# import copy
 
 from Source.utils import get_device
 
@@ -15,9 +15,21 @@ from Source.naive_continual_learner import NaiveContinualLearner
 
 # TODO: Later remove the imports not used..
 
-class MemoryAwareSynapses(NaiveContinualLearner):
+def get_n_sample_per_class(dataset: TCLExperience, n: int) -> List:
+    indices = {i: [] for i in dataset.classes_in_this_experience}
+    for i, (_, y, _) in enumerate(dataset.dataset):
+        indices[y].append(i)
+
+    subsets = []
+    for i in dataset.classes_in_this_experience:
+        dataloader = DataLoader(Subset(dataset.dataset, indices[i][:n]), batch_size=n)
+        samples, _, _  = next(iter(dataloader))
+        subsets.append((samples, i))
+    return subsets
+
+class MemoryAwareSynapsesReplay(NaiveContinualLearner):
     def __init__(self, args: Namespace, backbone: torch.nn.Module, scenario: GenericCLScenario, task2classes: Dict):
-        super(MemoryAwareSynapses, self).__init__(args, backbone, scenario, task2classes)
+        super(MemoryAwareSynapsesReplay, self).__init__(args, backbone, scenario, task2classes)
         self.lambda_val = args.lambda_val # The regression weightage
         self.update_size = args.update_size
         self.omega = dict()
@@ -25,6 +37,7 @@ class MemoryAwareSynapses(NaiveContinualLearner):
         self.class_in_this_task = None
         self.prev_count = 0
         self.use_task_labels = args.scenario == "TIL"
+        self.memory = MemoryBuffer(args, task2classes, self.backbone.input_size) # type: ignore
         
         for name, param in self.backbone.named_parameters():
             print(name, param.size())
@@ -62,8 +75,19 @@ class MemoryAwareSynapses(NaiveContinualLearner):
                 data = data.to(get_device())
                 target = target.to(get_device())
                 optimizer.zero_grad()
-                output, _ = self.backbone(data)
-                batch_loss = loss(output, target.long())
+                stream_output, _ = self.backbone(data)
+                
+                # Addition to incorporate Replay
+                memory=self.memory if current_task_index > 1 else None
+                if memory is not None:
+                    memo_samples, memo_labels = memory.sample_n(n = self.args.batch_size_memory,
+                                                                current_task_index = current_task_index)
+                    memo_samples, memo_labels = torch.tensor(memo_samples).to(get_device()), torch.tensor(memo_labels).to(get_device())
+                    memo_output, _ = self.backbone.forward(memo_samples)
+                    stream_output = torch.cat((stream_output, memo_output), dim=0)
+                    target = torch.cat((target, memo_labels), dim=0)
+
+                batch_loss = loss(stream_output, target)
                 reg_loss = torch.tensor(0.0).to(get_device())
                 if current_task_index != 1:
                     for name, param in self.backbone.named_parameters():
@@ -91,7 +115,7 @@ class MemoryAwareSynapses(NaiveContinualLearner):
             # print('data', data)
             output, _ = self.backbone(data)
             if self.class_in_this_task:
-                output_temp = torch.zeros_like(output, device=get_device())
+                output_temp = torch.zeros_like(output)
                 output_temp[:, self.class_in_this_task] = output[:, self.class_in_this_task]
                 output = output_temp
             l2_loss = torch.norm(output, dim=None)
@@ -114,6 +138,13 @@ class MemoryAwareSynapses(NaiveContinualLearner):
             self.prev_weights[name] = param.detach().clone().to(get_device())
         # print("classifier.bias", self.prev_weights['classifier.bias'])
         self.prev_count += count
+
+        # update memory
+        subsets = get_n_sample_per_class(train_dataset, self.args.memory_per_class)
+        all_samples = [samples.to(get_device()) for samples, _ in subsets]
+        labels = [label for _, label in subsets]
+        self.memory.insert_samples(all_samples, labels)
+
         return None
     
 
@@ -134,67 +165,84 @@ class MemoryAwareSynapses(NaiveContinualLearner):
         return accuracies
     
 
+class MemoryBuffer():
 
-# From MAS Github repo
-# class MAS_Omega_update(torch.optim.SGD):
-#     """
-#     Update the paramerter importance using the gradient of the function output norm. To be used at deployment time.
-#     reg_params:parameters omega to be updated
-#     batch_index,batch_size:used to keep a running average over the seen samples
-#     """
+    def __init__(self, args: Namespace,  task2classes: Dict, representation_size: int):
+        self.args = args
+        self.memory = {} # mapping from what to what? Tasks -> Dict(classes -> samples)
+        self.task2classes = task2classes
+        self.class2task = {}
+        for task, classes in task2classes.items():
+            for class_ in classes:
+                self.class2task[class_] = task
 
-#     def __init__(self, params, lr=0.001, momentum=0, dampening=0,
-#                  weight_decay=0, nesterov=False):
-#         super(MAS_Omega_update, self).__init__(params, lr,momentum,dampening,weight_decay,nesterov)
-        
-#     def __setstate__(self, state):
-#         super(MAS_Omega_update, self).__setstate__(state)
+        self.representation_size = representation_size
+        for task_index, classes in self.task2classes.items():
+            if self.memory.get(task_index, None) is None:
+                self.memory[task_index] = {}
+            for class_ in classes:
+                self.memory[task_index][class_] = None
 
-#     def step(self, reg_params, batch_index, batch_size, closure=None):
-#         """
-#         Performs a single parameters importance update setp
-#         """
-#         #print('************************DOING A STEP************************')
-#         loss = None
-#         if closure is not None:
-#             loss = closure()
-             
-#         for group in self.param_groups:
-   
-#             #if the parameter has an omega to be updated
-#             for p in group['params']:
-          
-#                 #print('************************ONE PARAM************************')
-                
-#                 if p.grad is None:
-#                     continue
-               
-#                 if p in reg_params:
-#                     d_p = p.grad.data
-                    
-#                     #HERE MAS IMPOERANCE UPDATE GOES
-#                     #get the gradient
-#                     unreg_dp = p.grad.data.clone()
-#                     reg_param=reg_params.get(p)
-
-#                     zero=torch.FloatTensor(p.data.size()).zero_()
-#                     #get parameter omega
-#                     omega=reg_param.get('omega')
-#                     omega=omega.cuda()
-
-#                     #sum up the magnitude of the gradient
-#                     prev_size=batch_index*batch_size
-#                     curr_size=(batch_index+1)*batch_size
-#                     omega=omega.mul(prev_size)
-
-#                     omega=omega.add(unreg_dp.abs_())
-#                     #update omega value
-#                     omega=omega.div(curr_size)
-#                     if omega.equal(zero.cuda()):
-#                         print('omega after zero')
-
-#                     reg_param['omega']=omega
-
-#                     reg_params[p]=reg_param
-#                     #HERE MAS IMPOERANCE UPDATE ENDS
-#         return loss
+    # Inserts the samples into the memory
+    def insert_samples(self, all_samples: List[torch.Tensor], labels: List) -> None:
+        for label, class_samples in zip(labels, all_samples):
+            self.memory[self.class2task[int(label)]][int(label)] = class_samples
+        return None
+            
+    # Returns n samples with its labels. n is generally batch_size_memory.
+    # The samples are fetched uniformly from each class seen till now
+    def sample_n(self, n: int, current_task_index: int) -> Tuple[NDArray, NDArray]:
+        tasks = list(range(1, current_task_index))
+        samples_per_class = self.get_samples_per_class(n, current_task_index)
+        samples = []
+        labels = []
+        i = 0
+        for task in tasks:
+            for class_ in self.memory[task]:
+                class_samples = self.memory[task][class_].cpu()
+                try:
+                    samples.extend(class_samples[np.random.choice(class_samples.shape[0],
+                                                        samples_per_class[i], replace=False)])
+                except:
+                    # If not enough memory samples, sample with replacement.
+                    samples.extend(class_samples[np.random.choice(class_samples.shape[0],
+                                                        samples_per_class[i], replace=True)])
+                labels.extend(list([class_])*samples_per_class[i])
+                i = i + 1
+        return np.stack(samples), np.array(labels)
+    
+    # def get_n_from_classes(self, n: int, current_task_index: int) -> Tuple:
+    #     tasks = list(range(1, current_task_index))
+    #     labels = []
+    #     samples = []
+    #     time = 0
+    #     ages = []
+    #     for task in reversed(tasks):
+    #         for class_ in self.memory[task]:
+    #             class_samples = self.memory[task][class_].cpu()
+    #             try:
+    #                 samples.append(class_samples[np.random.choice(class_samples.shape[0],n, replace=False)])
+    #             except:
+    #                 # If not enough memory samples, sample with replacement.
+    #                 samples.append(class_samples[np.random.choice(class_samples.shape[0],n, replace=True)])
+    #             labels.append(class_)
+    #             ages.append(time)
+    #         time = time + 1
+    #     return samples, labels, ages
+    
+    # Return number of samples for each class
+    def get_samples_per_class(self, n: int, current_task_index: int) -> List:
+        tasks = list(range(1, current_task_index))
+        number_of_classes = self.task2numclasses(tasks) # number of classes seen till now
+        a =  int(n / number_of_classes) # a is the number of samples per class
+        remaining = n % number_of_classes
+        samples_per_class = [a for _ in range(number_of_classes)]
+        for i in range(remaining):
+            samples_per_class[i] = samples_per_class[i] + 1
+        return samples_per_class
+    
+    def task2numclasses(self, tasks: List) -> int:
+        numclasses = 0
+        for task in tasks:
+            numclasses = numclasses + len(self.task2classes[task]) 
+        return numclasses
