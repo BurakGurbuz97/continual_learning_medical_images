@@ -123,6 +123,7 @@ dependencies:
   - zipp=3.15.0=pyhd8ed1ab_0
   - zlib=1.2.13=h8cc25b3_0
   - zstd=1.5.4=hd43e919_0
+  - faiss
   - pip:
     - absl-py==1.4.0
     - appdirs==1.4.4
@@ -178,4 +179,5 @@ dependencies:
     - tqdm==4.65.0
     - wandb==0.14.0
     - werkzeug==2.2.3
+    - medmnist
 # prefix: C:\Users\musta\anaconda3\envs\research_new
