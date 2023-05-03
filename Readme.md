@@ -25,13 +25,13 @@ python main.py --method remind --backbone vgg11 --dataset Microscopic  --return_
 To run vanilla DER:
 
 ```console
-python main.py --method "dark_experience_replay" --backbone "vgg11" --experiment_name "Microscope_CIL_DER" --epochs 10
+python main.py --method "dark_experience_replay" --optimizer "Adam" --experiment_name "Microscope_CIL_DER" --epochs 10 --alpha 0.75
 ```
 
 To run DER++
 
 ```console
-python main.py --method "dark_experience_replay" --backbone "vgg11" --experiment_name "Microscope_CIL_DERPP" --pp --epochs 10
+python main.py --method "dark_experience_replay" --optimizer "Adam" --experiment_name "Microscope_CIL_DERPP" --pp --epochs 10 --alpha 0.75 --beta 0.5
 ```
 
 ## Team Members
