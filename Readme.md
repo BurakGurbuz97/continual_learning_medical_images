@@ -19,7 +19,23 @@ python main.py --method remind --backbone vgg11 --dataset Microscopic  --return_
 ## Instructions to run NISPA
 
 ## Instructions to run MAS
+To run MAS:
 
+```console
+python main.py --experiment_name "MAS_TEST_L1_CIL_smallCNN" --method "memory_aware_synapses" --lambda_val 1
+```
+
+To run MAS with Replay
+
+```console
+python main.py --experiment_name "MASR_TEST_L1_CIL_smallCNN" --method "memory_aware_synapses_replay" --lambda_val 1
+```
+
+To run MAS (TIL setting)
+
+```console
+python main.py --experiment_name "MAS_TEST_L10_TIL_smallCNN" --scenario "TIL" --method "memory_aware_synapses" --lambda_val 10
+```
 ## Instructions to run DER
 
 To run vanilla DER:
