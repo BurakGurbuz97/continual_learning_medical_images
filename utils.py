@@ -62,17 +62,18 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument("--num_phases", type=int, default=20)
     parser.add_argument('--prune_perc', type=float, default=80.0)
 
-    # REMIND params: Uses Adam by default
-    parser.add_argument('--pretrain_epochs', type=int, default=5) #Pre-training of both networks, before splitting into G and F classifier
-    parser.add_argument('--replay_percentage', type=float, default=0.05)  #replay samples percentage --> min(X% of memory_per_class * num_classes , 50)
-    parser.add_argument('--return_idx', type=bool, default=False)  #required True for REMIND, set false for others
-    parser.add_argument('--remind_learning_rate', type=float, default=0.0001)
-    parser.add_argument('--spatial_feat_dim', type=int, default=2)
-    parser.add_argument('--num_codebooks', type=int, default=32)
-    parser.add_argument('--codebook_size', type=int, default=256)
-    parser.add_argument('--num_channels', type=int, default=512)
-    parser.add_argument('--overfit_batches', type=int, default=None)
-    parser.add_argument('--pretrain_overfit_batches', type=int, default=None)
+    # REMIND params:
+    parser.add_argument('--return_idx', type=bool, default = False)
+    parser.add_argument('--num_scans_per_class', type=float, default = 100) # CIFAR100: 4.096, EMNIST: 0.0784
+    parser.add_argument('--num_codebooks', type=int, default = 32)
+    parser.add_argument('--codebook_size', type=int, default = 256)
+    parser.add_argument('--load_path', type=str, default = None) #"./cifar10_pretrain_g.pth")
+    parser.add_argument('--store_path', type=str, default = "./pretrain_g")
+    parser.add_argument('--pretrain_lr', type=float, default = 0.01)
+    parser.add_argument('--num_epochs', type=int, default = 10)
+    parser.add_argument('--pretrain_epochs', type=int, default = 10)
+    parser.add_argument('--verbose', type=int, default = True)
+
 
     # DER params
     parser.add_argument('--alpha', type=float, default = 0.5)
