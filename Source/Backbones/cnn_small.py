@@ -109,3 +109,73 @@ class CNN_Small(nn.Module):
                 weights.append((copy.deepcopy(weight_mask).cpu().numpy(),
                                 copy.deepcopy(bias_mask).cpu().numpy())) # type: ignore
         return weights
+    
+
+class REMIND_G(torch.nn.Module):
+
+    def __init__(self) -> None:
+        super(REMIND_G, self).__init__()
+        self.conv = nn.Sequential(
+            # 64, 64
+            nn.Conv2d(3, 64, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            )
+        
+        self.reset_parameters()
+
+    def reset_parameters(self) -> None:
+        for m in self.modules():
+            if isinstance(m, (nn.Linear, nn.Conv2d)):
+                nn.init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute a forward pass.
+        :param x: input tensor (batch_size, input_size)
+        :return: output tensor (output_size)
+        """
+        return self.conv(x)
+    
+class REMIND_F(torch.nn.Module):
+
+    def __init__(self, output_size) -> None:
+        super(REMIND_F, self).__init__()
+        self.conv2lin_size = 128 * 8 * 8
+        self.conv = nn.Sequential(
+            nn.Conv2d(64, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
+            nn.ReLU(),
+            nn.MaxPool2d(2))
+        
+        self.fc = nn.Sequential(
+            nn.Linear(self.conv2lin_size, 2000),
+            nn.ReLU(),
+            nn.Linear(2000, output_size),
+        )
+
+        self.reset_parameters()
+    
+    def reset_parameters(self) -> None:
+        for m in self.modules():
+            if isinstance(m, (nn.Linear, nn.Conv2d)):
+                nn.init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute a forward pass.
+        :param x: input tensor (batch_size, input_size)
+        :return: output tensor (output_size)
+        """
+        x =  self.conv(x)
+        x = x.reshape(-1, self.conv2lin_size)
+        x = self.fc(x)
+        return x
+
