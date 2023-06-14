@@ -1,6 +1,6 @@
 import os
 from utils import get_argument_parser, set_seeds, log   
-from datasets import get_experience_streams
+from dataset import get_experience_streams
 import torch
 
 from Source.naive_continual_learner import NaiveContinualLearner
@@ -16,6 +16,8 @@ from Source.remind import Remind
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+from utils import get_backward_transfer, get_forward_transfer
 
 def get_device() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -74,14 +76,19 @@ if __name__ == '__main__':
     for task_index, (train_task, val_task, test_task) in enumerate(zip(scenario.train_stream,
                                                                        scenario.val_stream,  # type: ignore
                                                                        scenario.test_stream), 1):
+        # inital_accuracy = learner.accuracies_on_all_task(0, args.scenario == "TIL")
         print("Starting Task: {}".format(task_index))
         learner.begin_task(train_task, val_task, task_index)
         learner.learn_task(train_task, val_task, task_index)
         learner.end_task(train_task, val_task, task_index)
-        all_accuracies.append(learner.accuracies_on_previous_task(task_index, args.scenario == "TIL"))
+        all_accuracies.append(learner.accuracies_on_all_task(task_index, args.scenario == "TIL"))
         print("Ending Task: {}".format(task_index))
-        print()
 
-    log(args, all_accuracies)
+    
+    all_bwt = get_backward_transfer(all_accuracies)
+    all_fwt = get_forward_transfer(all_accuracies, [0]*len(all_accuracies))
+
+    log(args, all_accuracies, all_bwt , all_fwt)
+
         
 

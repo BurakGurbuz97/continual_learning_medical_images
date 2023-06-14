@@ -40,7 +40,7 @@ class MemoryAwareSynapsesReplay(NaiveContinualLearner):
         self.memory = MemoryBuffer(args, task2classes, self.backbone.input_size) # type: ignore
         
         for name, param in self.backbone.named_parameters():
-            print(name, param.size())
+            # print(name, param.size())
             self.omega[name] = torch.zeros_like(param).to(get_device())
             self.prev_weights[name] = torch.zeros_like(param).to(get_device())
 
@@ -64,11 +64,11 @@ class MemoryAwareSynapsesReplay(NaiveContinualLearner):
         # Create data loaders
         train_loader = DataLoader(train_dataset.dataset, batch_size = self.args.batch_size, 
                                   shuffle=True)
-        print("*****  TASK: {} has classes {}  *****".format(current_task_index,
-                                                             self.task2classes[current_task_index]))
+        # print("*****  TASK: {} has classes {}  *****".format(current_task_index,
+        #                                                      self.task2classes[current_task_index]))
         # Based on the task number, and if we are doing TIL or CIL, apply masking ..
         for epoch_id in range(self.args.epochs):
-            print("*****  Epoch: {}/{}  *****".format(epoch_id+1, self.args.epochs))
+            # print("*****  Epoch: {}/{}  *****".format(epoch_id+1, self.args.epochs))
             self.backbone.train()
             for data, target, _ in train_loader:
                 # print('data', data)

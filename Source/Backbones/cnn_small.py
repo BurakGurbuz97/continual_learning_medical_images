@@ -27,6 +27,11 @@ class CNN_Small(nn.Module):
         self.conv = nn.ModuleList()
         self.hidden_layers = nn.ModuleList()
 
+        if input_size[2] == 64:
+            stride = 2
+        else:
+            stride = 1
+
         # Add convolutional layers
         self.conv.append(self.conv2d(input_size[0], 64, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
         self.conv.append(nn.ReLU())
@@ -36,9 +41,10 @@ class CNN_Small(nn.Module):
 
         self.conv.append(self.conv2d(64, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
         self.conv.append(nn.ReLU())
-        self.conv.append(self.conv2d(128, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True))
+        self.conv.append(self.conv2d(128, 128, 3, stride=stride,padding=1, dilation=1, groups=1, bias=True))
         self.conv.append(nn.ReLU())
         self.conv.append(nn.MaxPool2d(2))
+        
         
         # Add hidden layers
         self.hidden_layers.append(self.linear(self.conv2lin_size, 2000))
@@ -111,6 +117,7 @@ class CNN_Small(nn.Module):
         return weights
     
 
+
 class REMIND_G(torch.nn.Module):
 
     def __init__(self) -> None:
@@ -143,13 +150,13 @@ class REMIND_G(torch.nn.Module):
     
 class REMIND_F(torch.nn.Module):
 
-    def __init__(self, output_size) -> None:
+    def __init__(self, output_size, stride) -> None:
         super(REMIND_F, self).__init__()
         self.conv2lin_size = 128 * 8 * 8
         self.conv = nn.Sequential(
             nn.Conv2d(64, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
             nn.ReLU(),
-            nn.Conv2d(128, 128, 3, stride=1,padding=1, dilation=1, groups=1, bias=True),
+            nn.Conv2d(128, 128, 3, stride=stride,padding=1, dilation=1, groups=1, bias=True),
             nn.ReLU(),
             nn.MaxPool2d(2))
         
@@ -178,4 +185,5 @@ class REMIND_F(torch.nn.Module):
         x = x.reshape(-1, self.conv2lin_size)
         x = self.fc(x)
         return x
+
 

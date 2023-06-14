@@ -25,7 +25,8 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--experiment_name', type=str, default = 'REMIND_MNIST_CIL') # This is the name of the log directory
 
     # Dataset params
-    parser.add_argument('--dataset', type=str, default = 'Microscopic', choices=["MNIST", "CIFAR10", "EMNIST", "Microscopic", "Radiological"]) # Name of the datasets to partition
+    parser.add_argument('--dataset', type=str, default = 'Microscopic', choices=["MNIST", "CIFAR10", "EMNIST", "Microscopic", "Radiological", 
+                                                                                 "Interhospital" , "Interdepartmental"]) # Name of the datasets to partition
     parser.add_argument('--number_of_tasks', type=int, default = 5)
     parser.add_argument('--scenario', type=str, default = "CIL", choices=["TIL", "CIL"])
 
@@ -69,9 +70,9 @@ def get_argument_parser() -> argparse.Namespace:
     parser.add_argument('--codebook_size', type=int, default = 256)
     parser.add_argument('--load_path', type=str, default = None) #"./cifar10_pretrain_g.pth")
     parser.add_argument('--store_path', type=str, default = "./pretrain_g")
-    parser.add_argument('--pretrain_lr', type=float, default = 0.01)
-    parser.add_argument('--num_epochs', type=int, default = 10)
-    parser.add_argument('--pretrain_epochs', type=int, default = 10)
+    parser.add_argument('--pretrain_lr', type=float, default = 0.001)
+    parser.add_argument('--num_epochs', type=int, default = 2)
+    parser.add_argument('--pretrain_epochs', type=int, default = 2)
     parser.add_argument('--verbose', type=int, default = True)
 
 
@@ -82,18 +83,37 @@ def get_argument_parser() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def log(args: argparse.Namespace, all_accuracies: List[List]) -> None:
+def log(args: argparse.Namespace, all_accuracies: List[List], btw_list , ftw_list, suffix= "Acc") -> None:
     with open(os.path.join(LOG_PATH, 'results_{}.csv'.format(args.experiment_name)), mode='w', newline='') as csvfile:
-        column_headers = ['Task{} Acc'.format(i) for i, _ in enumerate(all_accuracies, 1)]
-        row_headers = ['Eval After Task{}'.format(i) for i, _ in enumerate(all_accuracies, 1)]
+        column_headers = ['Task{}'.format(i) for i, _ in enumerate(all_accuracies, 1)]
+        row_headers = ['{}'.format(i) for i, _ in enumerate(all_accuracies, 1)]
         csv_writer = csv.writer(csvfile)
         
         # Write column headers
-        csv_writer.writerow([''] + column_headers)  # Add an empty cell before column headers for row headers
+        csv_writer.writerow(['After task'] + column_headers)  # Add an empty cell before column headers for row headers
         
         # Write row headers and data
         for row_header, row_data in zip(row_headers, all_accuracies):
             csv_writer.writerow([row_header] + row_data)
 
+        csv_writer.writerow(['btw'] + btw_list)
+        csv_writer.writerow(['ftw'] + ftw_list)
 
 
+def get_backward_transfer(acc):
+    score = []
+    N = len(acc)
+    for i in range(0,N):
+        aaa = acc[N-1][i] - acc[i][i]
+        score.append(aaa)
+    score.append(sum(score)/(N-1))
+    return score
+
+def get_forward_transfer(acc, b ):
+    score = []
+    N = len(acc)
+    for i in range(1,N):
+        aaa = acc[i-1][i] - b[i]
+        score.append(aaa)
+    score.append(sum(score)/(N-1))
+    return score

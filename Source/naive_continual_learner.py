@@ -93,4 +93,19 @@ class NaiveContinualLearner():
             accuracies.append(acc)
         return accuracies
 
+    # Overwrite this method if needed
+    def accuracies_on_all_task(self, current_task_index: int, use_task_labels: bool, verbose = True) -> List:
+        accuracies = []
+        for task_id, test_task in enumerate(self.scenario.test_stream, 1):
+            test_loader = DataLoader(test_task.dataset, self.args.batch_size)
+            acc = self._test(test_loader, self.task2classes[task_id] if use_task_labels else None)
+            if verbose:
+                print("Current Task: {} --> Accuracy on Task-{} is {}  (Scenario: {})".format(
+                    current_task_index,
+                    task_id,
+                    acc,
+                    "TIL" if use_task_labels else "CIL"
+                ))
+            accuracies.append(acc)
+        return accuracies
 

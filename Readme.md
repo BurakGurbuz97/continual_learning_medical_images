@@ -3,10 +3,10 @@
 
 ## Instructions to run REMIND
 ```console
-python main.py --method remind --backbone vgg11 --dataset Microscopic  --return_idx True  --experiment_name REMIND_Mircoscope_CIL --scenario CIL --batch_size 256
+python main.py --method remind --dataset Microscopic  --experiment_name REMIND_Mircoscope_CIL --scenario CIL --batch_size 256
 ```
 ```console
-python main.py --method remind --backbone vgg11 --dataset Radiological  --return_idx True -experiment_name REMIND_Radiological_CIL --scenario CIL --batch_size 256
+python main.py --method remind --dataset Radiological --experiment_name REMIND_Radiological_CIL --scenario CIL --batch_size 256
 ```
 
 
@@ -52,3 +52,13 @@ python main.py --method "dark_experience_replay" --optimizer "Adam" --experiment
 
 ## Team Members
 Amritpal Singh, Mustafa Burak Gurbuz, Shiva Souhith Gantha , Prahlad Jasti 
+
+
+# Batch run
+
+1. In the file job.sh, put this
+   ''' #!/bin/sh
+    python python_script.py
+    '''
+2. Execute this command to make the script runnable for you : chmod u+x run_test.sh
+3. Run it : ./run_test.sh

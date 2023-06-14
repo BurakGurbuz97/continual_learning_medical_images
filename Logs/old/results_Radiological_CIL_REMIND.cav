@@ -1,0 +1,176 @@
+,Task1 Acc,Task2 Acc,Task3 Acc,Task4 Acc,Task5 Acc,Task6 Acc,Avg Acc
+Eval After Task1,0.8553503155708313,0.8553503155708313
+Eval After Task2,0.735447883605957,0.9300427436828613,0.8327453136444092
+Eval After Task3,0.7723945379257202,0.8429848551750183,0.9675090312957764,0.8609628081321716
+Eval After Task4,0.7141861319541931,0.8126700520515442,0.9259927868843079,0.9138533473014832,0.8416755795478821
+Eval After Task5,0.40536773204803467,0.7660318613052368,0.9250902533531189,0.7334109544754028,0.7243589758872986,0.7108519554138184
+Eval After Task6,0.7664691805839539,0.8095608353614807,0.9187725782394409,0.791036069393158,0.7307692170143127,0.7772436141967773,0.7989752491315206
+
+
+
+(remind_proj) amrit@saitama:~/Downloads/REMIND$ python launch.py --pretrain_epochs 10 --num_epochs 10 --dataset Radiological
+Using downloaded and verified file: /home/amrit/Downloads/datasets/organcmnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/organcmnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/breastmnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/breastmnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/pneumoniamnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/pneumoniamnist.npz
+15
+Using downloaded and verified file: /home/amrit/Downloads/datasets/organcmnist.npz
+Using downloaded and verified file: /home/amrit/Downloads/datasets/organcmnist.npz
+REMIND_F(
+  (conv): Sequential(
+    (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU()
+    (2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU()
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+  (fc): Sequential(
+    (0): Linear(in_features=8192, out_features=2000, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=2000, out_features=11, bias=True)
+  )
+) REMIND_G(
+  (conv): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU()
+    (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU()
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+)
+Weights not found. Pretraining feature_extract_G
+^APretrain Epoch: 1/10, Loss: 1.3238592147827148
+Pretrain Epoch: 2/10, Loss: 0.6111790537834167
+Pretrain Epoch: 3/10, Loss: 0.4982886016368866
+Pretrain Epoch: 4/10, Loss: 0.27898553013801575
+Pretrain Epoch: 5/10, Loss: 0.24776454269886017
+Pretrain Epoch: 6/10, Loss: 0.1628250926733017
+Pretrain Epoch: 7/10, Loss: 0.10209472477436066
+Pretrain Epoch: 8/10, Loss: 0.1538977473974228
+Pretrain Epoch: 9/10, Loss: 0.14510032534599304
+Pretrain Epoch: 10/10, Loss: 0.07425898313522339
+Test Accuracy: 86.9980648282535%
+Feature Extractor: REMIND_G(
+  (conv): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU()
+    (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU()
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+)
+Classifier: REMIND_F(
+  (conv): Sequential(
+    (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU()
+    (2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU()
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+  (fc): Sequential(
+    (0): Linear(in_features=8192, out_features=2000, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=2000, out_features=15, bias=True)
+  )
+)
+
+Training Product Quantizer
+Completed in 13.82796025276184 secs
+
+Creating Memory
+Memory size in samples:  1500
+****** Learning Episode-1   Classes: [0, 1, 2, 3, 4] ******
+Epoch: 1/10, Loss: 2.3695255177361623
+Epoch: 2/10, Loss: 1.6556163685662406
+Epoch: 3/10, Loss: 1.2847039635692323
+Epoch: 4/10, Loss: 1.072200484041657
+Epoch: 5/10, Loss: 0.9272445316825594
+Epoch: 6/10, Loss: 0.8208018303627059
+Epoch: 7/10, Loss: 0.7372692940490586
+Epoch: 8/10, Loss: 0.6708267245973859
+Epoch: 9/10, Loss: 0.6173620466438551
+Epoch: 10/10, Loss: 0.5723526119653668
+Pushing codes to memory
+Current Task: 1 --> Accuracy on Task-1 is 0.86  (Scenario: CIL)
+****** Learning Episode-2   Classes: [5, 6] ******
+Epoch: 1/10, Loss: 2.19215401155608
+Epoch: 2/10, Loss: 1.8701741269656587
+Epoch: 3/10, Loss: 1.4255897977522438
+Epoch: 4/10, Loss: 1.1613370398325575
+Epoch: 5/10, Loss: 0.9933444167886462
+Epoch: 6/10, Loss: 0.8700243892769018
+Epoch: 7/10, Loss: 0.7753920606812652
+Epoch: 8/10, Loss: 0.7038311068234699
+Epoch: 9/10, Loss: 0.644324564271503
+Epoch: 10/10, Loss: 0.5954493051128728
+Pushing codes to memory
+Current Task: 2 --> Accuracy on Task-1 is 0.74  (Scenario: CIL)
+Current Task: 2 --> Accuracy on Task-2 is 0.93  (Scenario: CIL)
+****** Learning Episode-3   Classes: [8, 7] ******
+Epoch: 1/10, Loss: 3.3182663236345564
+Epoch: 2/10, Loss: 2.102202930620739
+Epoch: 3/10, Loss: 1.574664930502574
+Epoch: 4/10, Loss: 1.2732007184198928
+Epoch: 5/10, Loss: 1.0799190180642266
+Epoch: 6/10, Loss: 0.9475547820329668
+Epoch: 7/10, Loss: 0.8479075021281536
+Epoch: 8/10, Loss: 0.7695015330931971
+Epoch: 9/10, Loss: 0.7059267730939957
+Epoch: 10/10, Loss: 0.6524260697620257
+Pushing codes to memory
+Current Task: 3 --> Accuracy on Task-1 is 0.77  (Scenario: CIL)
+Current Task: 3 --> Accuracy on Task-2 is 0.84  (Scenario: CIL)
+Current Task: 3 --> Accuracy on Task-3 is 0.97  (Scenario: CIL)
+****** Learning Episode-4   Classes: [9, 10] ******
+Epoch: 1/10, Loss: 2.2241978645324707
+Epoch: 2/10, Loss: 1.66672882437706
+Epoch: 3/10, Loss: 1.3554017808702257
+Epoch: 4/10, Loss: 1.1604866741432085
+Epoch: 5/10, Loss: 1.0198950979444716
+Epoch: 6/10, Loss: 0.9160658121109009
+Epoch: 7/10, Loss: 0.8306317225335136
+Epoch: 8/10, Loss: 0.7627543525563346
+Epoch: 9/10, Loss: 0.70587019327982
+Epoch: 10/10, Loss: 0.6555848682920141
+Pushing codes to memory
+Current Task: 4 --> Accuracy on Task-1 is 0.71  (Scenario: CIL)
+Current Task: 4 --> Accuracy on Task-2 is 0.81  (Scenario: CIL)
+Current Task: 4 --> Accuracy on Task-3 is 0.93  (Scenario: CIL)
+Current Task: 4 --> Accuracy on Task-4 is 0.91  (Scenario: CIL)
+****** Learning Episode-5   Classes: [11, 12] ******
+Epoch: 1/10, Loss: 4.4225873947143555
+Epoch: 2/10, Loss: 3.7381534576416016
+Epoch: 3/10, Loss: 3.1455959479014077
+Epoch: 4/10, Loss: 2.6695624589920044
+Epoch: 5/10, Loss: 2.369362950325012
+Epoch: 6/10, Loss: 2.1979734102884927
+Epoch: 7/10, Loss: 2.054138353892735
+Epoch: 8/10, Loss: 1.9274763613939285
+Epoch: 9/10, Loss: 1.8244639767540827
+Epoch: 10/10, Loss: 1.744411301612854
+Pushing codes to memory
+Current Task: 5 --> Accuracy on Task-1 is 0.41  (Scenario: CIL)
+Current Task: 5 --> Accuracy on Task-2 is 0.77  (Scenario: CIL)
+Current Task: 5 --> Accuracy on Task-3 is 0.93  (Scenario: CIL)
+Current Task: 5 --> Accuracy on Task-4 is 0.73  (Scenario: CIL)
+Current Task: 5 --> Accuracy on Task-5 is 0.72  (Scenario: CIL)
+****** Learning Episode-6   Classes: [13, 14] ******
+Epoch: 1/10, Loss: 1.5234239734709263
+Epoch: 2/10, Loss: 1.0182066904380918
+Epoch: 3/10, Loss: 0.7775215106084943
+Epoch: 4/10, Loss: 0.6382503898348659
+Epoch: 5/10, Loss: 0.5456148887053132
+Epoch: 6/10, Loss: 0.479074024207269
+Epoch: 7/10, Loss: 0.4296734741489801
+Epoch: 8/10, Loss: 0.3909627679386175
+Epoch: 9/10, Loss: 0.3592178771375781
+Epoch: 10/10, Loss: 0.33250259463675313
+Pushing codes to memory
+Current Task: 6 --> Accuracy on Task-1 is 0.77  (Scenario: CIL)
+Current Task: 6 --> Accuracy on Task-2 is 0.81  (Scenario: CIL)
+Current Task: 6 --> Accuracy on Task-3 is 0.92  (Scenario: CIL)
+Current Task: 6 --> Accuracy on Task-4 is 0.79  (Scenario: CIL)
+Current Task: 6 --> Accuracy on Task-5 is 0.73  (Scenario: CIL)
+Current Task: 6 --> Accuracy on Task-6 is 0.78  (Scenario: CIL)
